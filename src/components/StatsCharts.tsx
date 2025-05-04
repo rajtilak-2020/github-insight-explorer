@@ -107,11 +107,27 @@ const StatsCharts: React.FC<StatsChartsProps> = ({ repos, events }) => {
           precision: 0,
         },
       },
+      x: {
+        grid: {
+          display: false,
+        },
+      },
     },
     plugins: {
       legend: {
         display: true,
         position: "top" as const,
+      },
+      tooltip: {
+        callbacks: {
+          title: (items: any[]) => {
+            if (!items.length) return '';
+            return items[0].label;
+          },
+          label: (context: any) => {
+            return `Contributions: ${context.raw}`;
+          },
+        },
       },
     },
   };

@@ -93,41 +93,51 @@ export function getTopRepositories(repos: GitHubRepo[], limit: number = 10) {
 
 // Process events to get contribution activity over time
 export function getContributionActivity(events: GitHubEvent[], months: number = 6) {
-  // Get the start date (e.g., 6 months ago)
+  // Get the start date (months ago from today)
+  const endDate = new Date();
   const startDate = new Date();
-  startDate.setMonth(startDate.getMonth() - months);
+  startDate.setMonth(startDate.getMonth() - (months - 1));
+  startDate.setDate(1); // Start from the 1st of the month
   
-  // Create array of month names
+  // Create array of month labels
   const monthLabels: string[] = [];
-  for (let i = 0; i < months; i++) {
-    const d = new Date();
-    d.setMonth(d.getMonth() - i);
-    monthLabels.unshift(d.toLocaleString('default', { month: 'short' }));
-  }
+  const monthData: { [key: string]: number } = {};
   
-  // Initialize contribution counts for each month
-  const contributions = Array(months).fill(0);
+  // Initialize month data with zeros
+  for (let i = 0; i < months; i++) {
+    const d = new Date(startDate);
+    d.setMonth(startDate.getMonth() + i);
+    const monthKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    const monthLabel = d.toLocaleString('default', { month: 'short', year: '2-digit' });
+    monthLabels.push(monthLabel);
+    monthData[monthKey] = 0;
+  }
   
   // Count contributions per month
   events.forEach((event) => {
     const eventDate = new Date(event.created_at);
-    if (eventDate >= startDate) {
-      const monthsAgo = Math.floor(
-        (new Date().getTime() - eventDate.getTime()) / (30 * 24 * 60 * 60 * 1000)
-      );
-      
-      if (monthsAgo < months) {
-        contributions[months - 1 - monthsAgo]++;
+    if (eventDate >= startDate && eventDate <= endDate) {
+      const monthKey = `${eventDate.getFullYear()}-${String(eventDate.getMonth() + 1).padStart(2, '0')}`;
+      if (monthKey in monthData) {
+        monthData[monthKey]++;
       }
     }
   });
+  
+  // Convert monthData to an array in the correct order
+  const contributionCounts = Object.keys(monthData)
+    .sort() // Ensure chronological order
+    .map(key => monthData[key]);
+  
+  console.log("Month labels:", monthLabels);
+  console.log("Contribution counts:", contributionCounts);
   
   return {
     labels: monthLabels,
     datasets: [
       {
         label: "Contributions",
-        data: contributions,
+        data: contributionCounts,
         fill: true,
         backgroundColor: "rgba(54, 162, 235, 0.2)",
         borderColor: "rgba(54, 162, 235, 1)",
