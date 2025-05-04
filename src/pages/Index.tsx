@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { ThemeProvider } from "@/contexts/ThemeContext";
@@ -7,6 +6,8 @@ import SearchBar from "@/components/SearchBar";
 import UserProfileCard from "@/components/UserProfileCard";
 import StatsCharts from "@/components/StatsCharts";
 import { ProfileSkeleton, ChartSkeleton } from "@/components/SkeletonLoader";
+import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 import { 
   fetchUserProfile, 
   fetchUserRepos, 
@@ -69,6 +70,9 @@ const Index = () => {
             </div>
             
             <div className="flex items-center gap-4">
+              <Button variant="outline" asChild>
+                <Link to="/stats-cards">Stats Cards</Link>
+              </Button>
               <ThemeToggle />
             </div>
           </header>
@@ -82,10 +86,15 @@ const Index = () => {
               <h2 className="text-2xl font-semibold mb-4">
                 Welcome to GitHub Insight Explorer
               </h2>
-              <p className="text-muted-foreground max-w-lg mx-auto">
+              <p className="text-muted-foreground max-w-lg mx-auto mb-8">
                 Enter a GitHub username to view detailed statistics, repository analytics,
                 and contribution patterns. Discover the coding journey with beautiful charts.
               </p>
+              <div className="flex justify-center gap-4">
+                <Button asChild>
+                  <Link to="/stats-cards">Create GitHub Stats Cards</Link>
+                </Button>
+              </div>
             </div>
           )}
           
