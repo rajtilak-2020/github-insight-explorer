@@ -1,256 +1,190 @@
 
-import React, { useRef } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState } from "react";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { GitHubStats } from "@/utils/statsCardUtils";
-import { useTheme } from "@/contexts/ThemeContext";
+import { Check, Copy } from "lucide-react";
 import { toast } from "sonner";
-import { Copy } from "lucide-react";
+import { GitHubStats, generateEmbedMarkdown, generateEmbedHTML, languageColors } from "@/utils/statsCardUtils";
+import { Progress } from "@/components/ui/progress";
 
-interface StatsCardProps {
-  stats: GitHubStats;
-  username: string;
-}
+// Basic stats card component (stars, commits, PRs, issues)
+export const BasicStatsCard = ({ stats, username }: { stats: GitHubStats, username: string }) => {
+  const [copied, setCopied] = useState(false);
 
-// Basic Stats Card
-export const BasicStatsCard: React.FC<StatsCardProps> = ({ stats, username }) => {
-  const { theme } = useTheme();
-  const cardRef = useRef<HTMLDivElement>(null);
-  
-  const handleCopyMarkdown = () => {
-    const markdown = `![${username}'s GitHub Stats](${window.location.origin}/api/stats/${username}/basic)`;
-    navigator.clipboard.writeText(markdown)
-      .then(() => toast.success("Markdown copied to clipboard"))
-      .catch(() => toast.error("Failed to copy to clipboard"));
+  const copyMarkdown = () => {
+    const markdown = generateEmbedMarkdown(username, 'basic');
+    navigator.clipboard.writeText(markdown);
+    setCopied(true);
+    toast.success("Markdown copied to clipboard");
+    setTimeout(() => setCopied(false), 3000);
   };
-
+  
   return (
-    <Card className="github-card relative overflow-hidden">
-      <CardHeader className="pb-2">
-        <CardTitle className="flex justify-between items-center">
-          <span className="text-github-purple dark:text-github-purple">{username}'s GitHub Stats</span>
+    <Card className="overflow-hidden">
+      <CardHeader className="bg-primary/5">
+        <CardTitle className="text-xl flex justify-between items-center">
+          <span>Basic GitHub Stats</span>
           <Button 
+            size="sm" 
             variant="ghost" 
-            size="icon" 
-            onClick={handleCopyMarkdown}
-            className="absolute top-2 right-2"
-            title="Copy markdown for README"
+            onClick={copyMarkdown}
+            className="h-8 px-2"
           >
-            <Copy className="h-4 w-4" />
+            {copied ? <Check className="h-4 w-4 mr-1" /> : <Copy className="h-4 w-4 mr-1" />}
+            {copied ? "Copied" : "Copy"}
           </Button>
         </CardTitle>
+        <CardDescription>
+          Stars, commits, PRs and issues
+        </CardDescription>
       </CardHeader>
-      <CardContent>
-        <div 
-          ref={cardRef} 
-          className={`p-4 rounded-lg ${theme === 'dark' ? 'bg-black text-white' : 'bg-github-light text-black'}`}
-          style={{ minHeight: "180px" }}
-        >
-          <h3 className="text-github-purple font-bold text-xl mb-4">{username}'s GitHub Stats</h3>
-          
-          <div className="grid grid-cols-2 gap-2">
-            <div>
-              <p className="flex justify-between">
-                <span className="text-white">Total Stars Earned:</span>
-                <span className="font-semibold">{stats.totalStars}</span>
-              </p>
-              <p className="flex justify-between">
-                <span className="text-white">Total Commits:</span>
-                <span className="font-semibold">{stats.totalCommits}</span>
-              </p>
-              <p className="flex justify-between">
-                <span className="text-white">Total PRs:</span>
-                <span className="font-semibold">{stats.totalPRs}</span>
-              </p>
-            </div>
-            
-            <div>
-              <p className="flex justify-between">
-                <span className="text-white">Total Issues:</span>
-                <span className="font-semibold">{stats.totalIssues}</span>
-              </p>
-              <p className="flex justify-between">
-                <span className="text-white">Contributed to (last year):</span>
-                <span className="font-semibold">{stats.contributionsLastYear}</span>
-              </p>
-            </div>
+      <CardContent className="pt-6">
+        <div className="space-y-4">
+          <div className="flex justify-between items-center">
+            <span className="text-sm">Total Stars</span>
+            <span className="font-semibold">{stats.totalStars.toLocaleString()}</span>
           </div>
-          
-          <div className="mt-4 flex justify-end">
-            <div className="w-16 h-16 rounded-full flex items-center justify-center"
+          <div className="flex justify-between items-center">
+            <span className="text-sm">Total Commits</span>
+            <span className="font-semibold">{stats.totalCommits.toLocaleString()}</span>
+          </div>
+          <div className="flex justify-between items-center">
+            <span className="text-sm">Total PRs</span>
+            <span className="font-semibold">{stats.totalPRs.toLocaleString()}</span>
+          </div>
+          <div className="flex justify-between items-center">
+            <span className="text-sm">Total Issues</span>
+            <span className="font-semibold">{stats.totalIssues.toLocaleString()}</span>
+          </div>
+          <div className="flex justify-between items-center">
+            <span className="text-sm">Contributions (Last Year)</span>
+            <span className="font-semibold">{stats.contributionsLastYear.toLocaleString()}</span>
+          </div>
+        </div>
+      </CardContent>
+      <CardFooter className="bg-muted/40 text-xs text-muted-foreground">
+        <p>Embed this card in your GitHub README</p>
+      </CardFooter>
+    </Card>
+  );
+};
+
+// Language stats card component
+export const LanguageStatsCard = ({ stats, username }: { stats: GitHubStats, username: string }) => {
+  const [copied, setCopied] = useState(false);
+
+  const copyMarkdown = () => {
+    const markdown = generateEmbedMarkdown(username, 'languages');
+    navigator.clipboard.writeText(markdown);
+    setCopied(true);
+    toast.success("Markdown copied to clipboard");
+    setTimeout(() => setCopied(false), 3000);
+  };
+  
+  return (
+    <Card className="overflow-hidden">
+      <CardHeader className="bg-primary/5">
+        <CardTitle className="text-xl flex justify-between items-center">
+          <span>Language Distribution</span>
+          <Button 
+            size="sm" 
+            variant="ghost" 
+            onClick={copyMarkdown}
+            className="h-8 px-2"
+          >
+            {copied ? <Check className="h-4 w-4 mr-1" /> : <Copy className="h-4 w-4 mr-1" />}
+            {copied ? "Copied" : "Copy"}
+          </Button>
+        </CardTitle>
+        <CardDescription>
+          Most used programming languages
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="pt-6">
+        <div className="space-y-4">
+          {stats.mostUsedLanguages.map((lang, index) => (
+            <div key={index} className="space-y-1">
+              <div className="flex justify-between text-sm">
+                <span>{lang.name}</span>
+                <span>{lang.percentage}%</span>
+              </div>
+              <Progress 
+                value={lang.percentage} 
+                className="h-2" 
                 style={{ 
-                  background: stats.mostUsedLanguages[0]?.color || languageColors.default,
-                  border: '3px solid rgba(255,255,255,0.2)'
-                }}
-            >
-              <span className="text-white font-bold text-lg">
-                {stats.mostUsedLanguages[0]?.name?.charAt(0) || "?"}
-              </span>
+                  backgroundColor: 'rgba(0,0,0,0.1)',
+                  // Use the language color from our imported object
+                  '--progress-color': lang.color
+                } as React.CSSProperties}
+                indicatorStyle={{ background: lang.color }}
+              />
             </div>
-          </div>
+          ))}
         </div>
       </CardContent>
+      <CardFooter className="bg-muted/40 text-xs text-muted-foreground">
+        <p>Embed this card in your GitHub README</p>
+      </CardFooter>
     </Card>
   );
 };
 
-// Language Stats Card
-export const LanguageStatsCard: React.FC<StatsCardProps> = ({ stats, username }) => {
-  const { theme } = useTheme();
-  const cardRef = useRef<HTMLDivElement>(null);
-  
-  const handleCopyMarkdown = () => {
-    const markdown = `![${username}'s Language Stats](${window.location.origin}/api/stats/${username}/languages)`;
-    navigator.clipboard.writeText(markdown)
-      .then(() => toast.success("Markdown copied to clipboard"))
-      .catch(() => toast.error("Failed to copy to clipboard"));
-  };
+// Streak stats card component
+export const StreakStatsCard = ({ stats, username }: { stats: GitHubStats, username: string }) => {
+  const [copied, setCopied] = useState(false);
 
+  const copyMarkdown = () => {
+    const markdown = generateEmbedMarkdown(username, 'streak');
+    navigator.clipboard.writeText(markdown);
+    setCopied(true);
+    toast.success("Markdown copied to clipboard");
+    setTimeout(() => setCopied(false), 3000);
+  };
+  
   return (
-    <Card className="github-card relative overflow-hidden">
-      <CardHeader className="pb-2">
-        <CardTitle className="flex justify-between items-center">
-          <span className="text-github-purple dark:text-github-purple">Most Used Languages</span>
+    <Card className="overflow-hidden">
+      <CardHeader className="bg-primary/5">
+        <CardTitle className="text-xl flex justify-between items-center">
+          <span>Contribution Streak</span>
           <Button 
+            size="sm" 
             variant="ghost" 
-            size="icon" 
-            onClick={handleCopyMarkdown}
-            className="absolute top-2 right-2"
-            title="Copy markdown for README"
+            onClick={copyMarkdown}
+            className="h-8 px-2"
           >
-            <Copy className="h-4 w-4" />
+            {copied ? <Check className="h-4 w-4 mr-1" /> : <Copy className="h-4 w-4 mr-1" />}
+            {copied ? "Copied" : "Copy"}
           </Button>
         </CardTitle>
+        <CardDescription>
+          GitHub contribution statistics
+        </CardDescription>
       </CardHeader>
-      <CardContent>
-        <div
-          ref={cardRef}
-          className={`p-4 rounded-lg ${theme === 'dark' ? 'bg-black text-white' : 'bg-github-light text-black'}`}
-          style={{ minHeight: "200px" }}
-        >
-          <h3 className="text-github-purple font-bold text-xl mb-4">Most Used Languages</h3>
-          
-          <div className="mb-4">
-            <div className="flex h-4 mb-4 overflow-hidden">
-              {stats.mostUsedLanguages.map((lang, index) => (
-                <div 
-                  key={index} 
-                  style={{ 
-                    width: `${lang.percentage}%`, 
-                    backgroundColor: lang.color || languageColors.default 
-                  }} 
-                />
-              ))}
-            </div>
-            
-            <div className="grid grid-cols-2 gap-2">
-              {stats.mostUsedLanguages.map((lang, index) => (
-                <div key={index} className="flex items-center mb-1">
-                  <span 
-                    className="h-3 w-3 rounded-full mr-2" 
-                    style={{ backgroundColor: lang.color || languageColors.default }}
-                  ></span>
-                  <span className="text-sm text-white">{lang.name} {lang.percentage}%</span>
-                </div>
-              ))}
+      <CardContent className="pt-6">
+        <div className="space-y-4">
+          <div className="flex justify-between items-center">
+            <span className="text-sm">Current Streak</span>
+            <span className="font-semibold">{stats.currentStreak.count} days</span>
+          </div>
+          <div className="flex justify-between items-center">
+            <span className="text-sm">Longest Streak</span>
+            <span className="font-semibold">{stats.longestStreak.count} days</span>
+          </div>
+          <div className="flex justify-between items-center">
+            <span className="text-sm">Total Contributions</span>
+            <span className="font-semibold">{stats.totalContributions.toLocaleString()}</span>
+          </div>
+          <div className="mt-4 pt-4 border-t">
+            <div className="text-xs text-muted-foreground mb-2">Longest streak</div>
+            <div className="text-sm">
+              {stats.longestStreak.start} - {stats.longestStreak.end}
             </div>
           </div>
         </div>
       </CardContent>
-    </Card>
-  );
-};
-
-// Streak Stats Card
-export const StreakStatsCard: React.FC<StatsCardProps> = ({ stats, username }) => {
-  const { theme } = useTheme();
-  const cardRef = useRef<HTMLDivElement>(null);
-  
-  const handleCopyMarkdown = () => {
-    const markdown = `![${username}'s Streak Stats](${window.location.origin}/api/stats/${username}/streak)`;
-    navigator.clipboard.writeText(markdown)
-      .then(() => toast.success("Markdown copied to clipboard"))
-      .catch(() => toast.error("Failed to copy to clipboard"));
-  };
-
-  return (
-    <Card className="github-card relative overflow-hidden">
-      <CardHeader className="pb-2">
-        <CardTitle className="flex justify-between items-center">
-          <span className="text-github-purple dark:text-github-purple">GitHub Streak Stats</span>
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={handleCopyMarkdown}
-            className="absolute top-2 right-2"
-            title="Copy markdown for README"
-          >
-            <Copy className="h-4 w-4" />
-          </Button>
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div
-          ref={cardRef}
-          className={`p-4 rounded-lg ${theme === 'dark' ? 'bg-black text-white' : 'bg-github-light text-black'}`}
-          style={{ minHeight: "180px" }}
-        >
-          <div className="grid grid-cols-3 gap-4 text-center">
-            <div>
-              <div className="text-github-purple text-3xl font-bold mb-1">
-                {stats.totalContributions}
-              </div>
-              <div className="text-github-purple text-sm">Total Contributions</div>
-              <div className="text-xs text-white mt-2">
-                Nov 3, 2023 – Present
-              </div>
-            </div>
-            
-            <div className="flex flex-col items-center justify-center">
-              <div className="relative w-16 h-16 mb-1">
-                <svg viewBox="0 0 36 36" className="w-full h-full">
-                  <path
-                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                    fill="none"
-                    stroke="rgba(127, 87, 221, 0.2)"
-                    strokeWidth="3"
-                  />
-                  <path
-                    d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
-                    fill="none"
-                    stroke="#7F57DD"
-                    strokeWidth="3"
-                    strokeDasharray={`${stats.currentStreak.count * 3}, 100`}
-                  />
-                  <text
-                    x="18"
-                    y="20.5"
-                    className="text-2xl font-bold"
-                    textAnchor="middle"
-                    fill="#7F57DD"
-                  >
-                    {stats.currentStreak.count}
-                  </text>
-                </svg>
-              </div>
-              <div className="text-github-purple text-sm">Current Streak</div>
-              <div className="text-xs text-white mt-2">
-                {stats.currentStreak.start} - {stats.currentStreak.end}
-              </div>
-            </div>
-            
-            <div>
-              <div className="text-github-purple text-3xl font-bold mb-1">
-                {stats.longestStreak.count}
-              </div>
-              <div className="text-github-purple text-sm">Longest Streak</div>
-              <div className="text-xs text-white mt-2">
-                {stats.longestStreak.start} - {stats.longestStreak.end}
-              </div>
-            </div>
-          </div>
-        </div>
-      </CardContent>
+      <CardFooter className="bg-muted/40 text-xs text-muted-foreground">
+        <p>Embed this card in your GitHub README</p>
+      </CardFooter>
     </Card>
   );
 };
