@@ -113,10 +113,8 @@ export const LanguageStatsCard = ({ stats, username }: { stats: GitHubStats, use
                 className="h-2" 
                 style={{ 
                   backgroundColor: 'rgba(0,0,0,0.1)',
-                  // Use the language color from our imported object
                   '--progress-color': lang.color
                 } as React.CSSProperties}
-                indicatorStyle={{ background: lang.color }}
               />
             </div>
           ))}
