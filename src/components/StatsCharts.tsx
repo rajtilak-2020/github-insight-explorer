@@ -10,17 +10,15 @@ import {
   LinearScale,
   BarElement,
   Title,
-  PointElement,
-  LineElement,
-  Filler,
 } from "chart.js";
-import { Pie, Bar, Line } from "react-chartjs-2";
+import { Pie, Bar } from "react-chartjs-2";
 import { GitHubRepo, GitHubEvent } from "@/utils/fetchGithubData";
 import { 
   getLanguageDistribution, 
   getTopRepositories, 
-  getContributionActivity 
+  getContributionData 
 } from "@/utils/processChartData";
+import { GitHub } from "lucide-react";
 
 // Register Chart.js components
 ChartJS.register(
@@ -30,10 +28,7 @@ ChartJS.register(
   CategoryScale,
   LinearScale,
   BarElement,
-  Title,
-  PointElement,
-  LineElement,
-  Filler
+  Title
 );
 
 interface StatsChartsProps {
@@ -44,7 +39,7 @@ interface StatsChartsProps {
 const StatsCharts: React.FC<StatsChartsProps> = ({ repos, events }) => {
   const languageData = getLanguageDistribution(repos);
   const topReposData = getTopRepositories(repos, 5);
-  const contributionData = getContributionActivity(events);
+  const contributionData = getContributionData(events);
 
   // Chart options
   const languageOptions = {
@@ -97,41 +92,6 @@ const StatsCharts: React.FC<StatsChartsProps> = ({ repos, events }) => {
     },
   };
 
-  const lineOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    scales: {
-      y: {
-        beginAtZero: true,
-        ticks: {
-          precision: 0,
-        },
-      },
-      x: {
-        grid: {
-          display: false,
-        },
-      },
-    },
-    plugins: {
-      legend: {
-        display: true,
-        position: "top" as const,
-      },
-      tooltip: {
-        callbacks: {
-          title: (items: any[]) => {
-            if (!items.length) return '';
-            return items[0].label;
-          },
-          label: (context: any) => {
-            return `Contributions: ${context.raw}`;
-          },
-        },
-      },
-    },
-  };
-
   const hasRepos = repos && repos.length > 0;
   const hasEvents = events && events.length > 0;
 
@@ -165,12 +125,71 @@ const StatsCharts: React.FC<StatsChartsProps> = ({ repos, events }) => {
 
       {hasEvents && (
         <Card className="github-card md:col-span-2">
-          <CardHeader>
-            <CardTitle>Contribution Activity (Last 6 Months)</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle>Contribution Graph (Last 6 Months)</CardTitle>
+            <GitHub className="h-5 w-5 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="h-[300px] w-full">
-              <Line data={contributionData} options={lineOptions} />
+            <div className="h-auto w-full overflow-x-auto pb-4">
+              <div className="contribution-graph">
+                {/* Month labels */}
+                <div className="flex mb-1 text-xs text-muted-foreground">
+                  {contributionData.months.map((month, i) => (
+                    <div
+                      key={i}
+                      className="flex-1 text-center"
+                      style={{
+                        position: 'relative',
+                        left: `${(month.index / contributionData.weeks.length) * 100}%`
+                      }}
+                    >
+                      {month.name}
+                    </div>
+                  ))}
+                </div>
+                
+                {/* Day labels */}
+                <div className="flex">
+                  <div className="pr-2 text-xs flex flex-col justify-around h-[104px] text-muted-foreground">
+                    <span>Sun</span>
+                    <span>Tue</span>
+                    <span>Thu</span>
+                    <span>Sat</span>
+                  </div>
+                  
+                  {/* Contribution cells */}
+                  <div className="flex-1 flex">
+                    {contributionData.weeks.map((week, weekIndex) => (
+                      <div key={weekIndex} className="flex flex-col gap-1">
+                        {week.map((day, dayIndex) => (
+                          <div
+                            key={`${weekIndex}-${dayIndex}`}
+                            className="w-3 h-3 rounded-sm"
+                            style={{ 
+                              backgroundColor: contributionData.colors[day.level],
+                              cursor: 'pointer'
+                            }}
+                            title={`${day.date}: ${day.count} contributions`}
+                          />
+                        ))}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                
+                {/* Color scale */}
+                <div className="flex items-center justify-end mt-2 text-xs text-muted-foreground">
+                  <span className="mr-2">Less</span>
+                  {contributionData.colors.map((color, i) => (
+                    <div
+                      key={i}
+                      className="w-3 h-3 rounded-sm mx-1"
+                      style={{ backgroundColor: color }}
+                    />
+                  ))}
+                  <span className="ml-2">More</span>
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>
