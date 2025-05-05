@@ -1,4 +1,5 @@
-import React from "react";
+
+import React, { useRef, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Chart as ChartJS,
@@ -18,6 +19,7 @@ import {
   getContributionData 
 } from "@/utils/processChartData";
 import { Github } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 // Register Chart.js components
 ChartJS.register(
@@ -36,6 +38,7 @@ interface StatsChartsProps {
 }
 
 const StatsCharts: React.FC<StatsChartsProps> = ({ repos, events }) => {
+  const contributionContainerRef = useRef<HTMLDivElement>(null);
   const languageData = getLanguageDistribution(repos);
   const topReposData = getTopRepositories(repos, 5);
   const contributionData = getContributionData(events);
@@ -94,6 +97,15 @@ const StatsCharts: React.FC<StatsChartsProps> = ({ repos, events }) => {
   const hasRepos = repos && repos.length > 0;
   const hasEvents = events && events.length > 0;
 
+  // Effect to ensure proper scrolling behavior for the contribution graph
+  useEffect(() => {
+    if (contributionContainerRef.current) {
+      const container = contributionContainerRef.current;
+      // Set initial scroll position to show all weeks if needed
+      container.scrollLeft = 0;
+    }
+  }, [contributionData]);
+
   return (
     <div className="grid md:grid-cols-2 gap-6">
       {hasRepos && (
@@ -129,17 +141,19 @@ const StatsCharts: React.FC<StatsChartsProps> = ({ repos, events }) => {
             <Github className="h-5 w-5 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="h-auto w-full overflow-x-auto pb-4">
-              <div className="contribution-graph">
-                {/* Month labels */}
-                <div className="flex mb-1 text-xs text-muted-foreground">
+            <ScrollArea className="h-[220px] w-full overflow-hidden">
+              <div 
+                ref={contributionContainerRef}
+                className="min-w-[740px] pb-4 relative"
+              >
+                {/* Month labels - positioned absolutely for better accuracy */}
+                <div className="flex relative h-6 mb-1">
                   {contributionData.months.map((month, i) => (
                     <div
                       key={i}
-                      className="flex-1 text-center"
+                      className="absolute text-xs text-muted-foreground whitespace-nowrap"
                       style={{
-                        position: 'relative',
-                        left: `${(month.index / contributionData.weeks.length) * 100}%`
+                        left: `${month.index * 12}px`
                       }}
                     >
                       {month.name}
@@ -147,8 +161,8 @@ const StatsCharts: React.FC<StatsChartsProps> = ({ repos, events }) => {
                   ))}
                 </div>
                 
-                {/* Day labels */}
                 <div className="flex">
+                  {/* Day labels */}
                   <div className="pr-2 text-xs flex flex-col justify-around h-[104px] text-muted-foreground">
                     <span>Sun</span>
                     <span>Tue</span>
@@ -157,7 +171,7 @@ const StatsCharts: React.FC<StatsChartsProps> = ({ repos, events }) => {
                   </div>
                   
                   {/* Contribution cells */}
-                  <div className="flex-1 flex">
+                  <div className="flex gap-1">
                     {contributionData.weeks.map((week, weekIndex) => (
                       <div key={weekIndex} className="flex flex-col gap-1">
                         {week.map((day, dayIndex) => (
@@ -177,7 +191,7 @@ const StatsCharts: React.FC<StatsChartsProps> = ({ repos, events }) => {
                 </div>
                 
                 {/* Color scale */}
-                <div className="flex items-center justify-end mt-2 text-xs text-muted-foreground">
+                <div className="flex items-center justify-end mt-4 text-xs text-muted-foreground">
                   <span className="mr-2">Less</span>
                   {contributionData.colors.map((color, i) => (
                     <div
@@ -189,7 +203,7 @@ const StatsCharts: React.FC<StatsChartsProps> = ({ repos, events }) => {
                   <span className="ml-2">More</span>
                 </div>
               </div>
-            </div>
+            </ScrollArea>
           </CardContent>
         </Card>
       )}
