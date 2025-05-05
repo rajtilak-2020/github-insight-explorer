@@ -93,47 +93,81 @@ export function getTopRepositories(repos: GitHubRepo[], limit: number = 10) {
 
 // Process events to get contribution activity over time
 export function getContributionActivity(events: GitHubEvent[], months: number = 6) {
-  // Get the start date (months ago from today)
-  const endDate = new Date();
-  const startDate = new Date();
-  startDate.setMonth(startDate.getMonth() - (months - 1));
-  startDate.setDate(1); // Start from the 1st of the month
+  // Calculate the date range: from 6 months ago to today
+  const today = new Date();
   
-  // Create array of month labels
-  const monthLabels: string[] = [];
-  const monthData: { [key: string]: number } = {};
+  // Set the end date to the current date
+  const endDate = new Date(today);
   
-  // Initialize month data with zeros
+  // Set the start date to 6 months ago (from the beginning of that month)
+  const startDate = new Date(today);
+  startDate.setMonth(today.getMonth() - (months - 1));
+  startDate.setDate(1); // Start from the first day of the month
+  startDate.setHours(0, 0, 0, 0); // Start from midnight
+  
+  // Create a map of months to count contributions
+  const monthData: Map<string, {label: string, count: number}> = new Map();
+  
+  // Initialize all months with zero contributions
   for (let i = 0; i < months; i++) {
-    const d = new Date(startDate);
-    d.setMonth(startDate.getMonth() + i);
-    const monthKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-    const monthLabel = d.toLocaleString('default', { month: 'short', year: '2-digit' });
-    monthLabels.push(monthLabel);
-    monthData[monthKey] = 0;
+    const currentDate = new Date(startDate);
+    currentDate.setMonth(startDate.getMonth() + i);
+    
+    // Format: YYYY-MM for sorting
+    const monthKey = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
+    
+    // Format: MMM YY for display (e.g. Jan 25)
+    const monthLabel = currentDate.toLocaleString('default', { month: 'short', year: '2-digit' });
+    
+    monthData.set(monthKey, {label: monthLabel, count: 0});
   }
   
-  // Count contributions per month
-  events.forEach((event) => {
-    const eventDate = new Date(event.created_at);
-    if (eventDate >= startDate && eventDate <= endDate) {
-      const monthKey = `${eventDate.getFullYear()}-${String(eventDate.getMonth() + 1).padStart(2, '0')}`;
-      if (monthKey in monthData) {
-        monthData[monthKey]++;
+  // Count actual contributions
+  if (events && events.length > 0) {
+    // Filter events by type to only include actual contributions
+    const contributionEventTypes = [
+      'PushEvent', 
+      'PullRequestEvent', 
+      'IssuesEvent', 
+      'CommitCommentEvent',
+      'CreateEvent', // For repository or branch creation
+      'PullRequestReviewEvent',
+      'PullRequestReviewCommentEvent',
+    ];
+    
+    const contributionEvents = events.filter(event => 
+      contributionEventTypes.includes(event.type)
+    );
+    
+    // Count contributions per month
+    contributionEvents.forEach(event => {
+      const eventDate = new Date(event.created_at);
+      
+      // Only include events within our target date range
+      if (eventDate >= startDate && eventDate <= endDate) {
+        const monthKey = `${eventDate.getFullYear()}-${String(eventDate.getMonth() + 1).padStart(2, '0')}`;
+        
+        if (monthData.has(monthKey)) {
+          const monthInfo = monthData.get(monthKey)!;
+          monthData.set(monthKey, {
+            ...monthInfo,
+            count: monthInfo.count + 1
+          });
+        }
       }
-    }
-  });
+    });
+  }
   
-  // Convert monthData to an array in the correct order
-  const contributionCounts = Object.keys(monthData)
-    .sort() // Ensure chronological order
-    .map(key => monthData[key]);
+  // Convert the map to arrays for the chart
+  const sortedKeys = Array.from(monthData.keys()).sort();
+  const labels = sortedKeys.map(key => monthData.get(key)!.label);
+  const contributionCounts = sortedKeys.map(key => monthData.get(key)!.count);
   
-  console.log("Month labels:", monthLabels);
+  console.log("Month labels:", labels);
   console.log("Contribution counts:", contributionCounts);
   
   return {
-    labels: monthLabels,
+    labels: labels,
     datasets: [
       {
         label: "Contributions",
