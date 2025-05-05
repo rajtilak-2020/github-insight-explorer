@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -10,8 +9,9 @@ import {
   LinearScale,
   BarElement,
   Title,
-} from "chart.js";
-import { Pie, Bar } from "react-chartjs-2";
+  TooltipItem,
+} from 'chart.js';
+import { Pie, Bar } from 'react-chartjs-2';
 import { GitHubRepo, GitHubEvent } from "@/utils/fetchGithubData";
 import { 
   getLanguageDistribution, 
