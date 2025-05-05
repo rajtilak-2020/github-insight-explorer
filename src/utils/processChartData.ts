@@ -1,3 +1,4 @@
+
 import { GitHubRepo, GitHubEvent } from "./fetchGithubData";
 
 // Color palette for charts
@@ -42,7 +43,7 @@ export function getLanguageDistribution(repos: GitHubRepo[]) {
   const otherLanguages = Object.entries(languages)
     .sort((a, b) => b[1] - a[1])
     .slice(8)
-    .reduce((sum, [count]) => sum + count, 0);
+    .reduce((sum, [_, count]) => sum + count, 0); // Fixed: Properly typed reduce function
 
   if (otherLanguages > 0) {
     sortedLanguages.push(["Others", otherLanguages]);

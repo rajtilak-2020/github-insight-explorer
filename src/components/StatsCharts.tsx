@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -18,7 +17,7 @@ import {
   getTopRepositories, 
   getContributionData 
 } from "@/utils/processChartData";
-import { GitHub } from "lucide-react";
+import { Github } from "lucide-react";
 
 // Register Chart.js components
 ChartJS.register(
@@ -127,7 +126,7 @@ const StatsCharts: React.FC<StatsChartsProps> = ({ repos, events }) => {
         <Card className="github-card md:col-span-2">
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Contribution Graph (Last 6 Months)</CardTitle>
-            <GitHub className="h-5 w-5 text-muted-foreground" />
+            <Github className="h-5 w-5 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="h-auto w-full overflow-x-auto pb-4">
