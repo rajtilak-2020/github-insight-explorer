@@ -14,8 +14,8 @@ import {
   Legend,
   LinearScale,
   Title,
-  Tooltip
-} from 'chart.js';
+  Tooltip,
+} from 'chart.js/auto';
 import React from "react";
 import { Bar, Pie } from 'react-chartjs-2';
 
