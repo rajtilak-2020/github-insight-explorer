@@ -1,5 +1,5 @@
 
-import { GitHubRepo, GitHubEvent } from "./fetchGithubData";
+import { GitHubRepo } from "./fetchGithubData";
 
 // Color palette for charts
 export const chartColors = {
@@ -43,7 +43,7 @@ export function getLanguageDistribution(repos: GitHubRepo[]) {
   const otherLanguages = Object.entries(languages)
     .sort((a, b) => b[1] - a[1])
     .slice(8)
-    .reduce((sum, [_, count]) => sum + count, 0); // Fixed: Properly typed reduce function
+    .reduce((sum, [_, count]) => sum + count, 0);
 
   if (otherLanguages > 0) {
     sortedLanguages.push(["Others", otherLanguages]);
@@ -89,150 +89,4 @@ export function getTopRepositories(repos: GitHubRepo[], limit: number = 10) {
       },
     ],
   };
-}
-
-// Get contribution data for the heatmap graph
-export function getContributionData(events: GitHubEvent[]) {
-  // Define activity levels and their colors (improved color scheme)
-  const activityColors = [
-    "#ebedf0", // Level 0 - No activity
-    "#9be9a8", // Level 1 - Low activity
-    "#40c463", // Level 2 - Medium activity
-    "#30a14e", // Level 3 - High activity
-    "#216e39"  // Level 4 - Very high activity
-  ];
-
-  // Calculate date range: last 6 months
-  const today = new Date();
-  const endDate = new Date(today);
-  
-  // Start date: 6 months ago
-  const startDate = new Date(today);
-  startDate.setMonth(today.getMonth() - 6);
-  startDate.setDate(1); // Start from the first day of that month
-  
-  // Create a map to store contributions by date
-  const contributionsByDate: Map<string, number> = new Map();
-  
-  // Initialize all days in the range with 0 contributions
-  let currentDate = new Date(startDate);
-  while (currentDate <= endDate) {
-    const dateKey = formatDate(currentDate);
-    contributionsByDate.set(dateKey, 0);
-    
-    // Move to next day
-    currentDate.setDate(currentDate.getDate() + 1);
-  }
-  
-  // Filter contribution events
-  const contributionEventTypes = [
-    'PushEvent', 
-    'PullRequestEvent', 
-    'IssuesEvent', 
-    'CommitCommentEvent',
-    'CreateEvent', 
-    'PullRequestReviewEvent',
-    'PullRequestReviewCommentEvent',
-  ];
-  
-  // Count contributions per day
-  if (events && events.length > 0) {
-    const contributionEvents = events.filter(event => 
-      contributionEventTypes.includes(event.type)
-    );
-    
-    contributionEvents.forEach(event => {
-      const eventDate = new Date(event.created_at);
-      if (eventDate >= startDate && eventDate <= endDate) {
-        const dateKey = formatDate(eventDate);
-        if (contributionsByDate.has(dateKey)) {
-          contributionsByDate.set(dateKey, contributionsByDate.get(dateKey)! + 1);
-        }
-      }
-    });
-  }
-  
-  // Find max contributions to normalize activity levels
-  const allContributions = Array.from(contributionsByDate.values());
-  const maxContributions = Math.max(...allContributions, 1); // Avoid division by zero
-  
-  // Adjust start date to begin from the Sunday of the week containing the start date
-  const weekStartDate = new Date(startDate);
-  weekStartDate.setDate(startDate.getDate() - startDate.getDay());
-  
-  // Group by weeks (starting from Sunday)
-  const weeks: Array<{ date: string; count: number; level: number }[]> = [];
-  
-  // Fill in the data structure for the heatmap
-  currentDate = new Date(weekStartDate);
-  
-  while (currentDate <= endDate) {
-    const week: { date: string; count: number; level: number }[] = [];
-    
-    // Add days for this week (Sunday to Saturday)
-    for (let i = 0; i < 7; i++) {
-      if (currentDate <= endDate) {
-        const dateKey = formatDate(currentDate);
-        const count = contributionsByDate.get(dateKey) || 0;
-        
-        // Calculate activity level (0-4)
-        let level = 0;
-        if (count > 0) {
-          // Normalize to levels 1-4 based on activity
-          level = Math.min(Math.ceil((count / maxContributions) * 4), 4);
-        }
-        
-        week.push({
-          date: dateKey,
-          count,
-          level
-        });
-      }
-      
-      // Move to next day
-      currentDate.setDate(currentDate.getDate() + 1);
-    }
-    
-    if (week.length > 0) {
-      weeks.push(week);
-    }
-  }
-  
-  // Calculate month labels with more accurate positioning
-  const months: { name: string; index: number }[] = [];
-  let lastMonth = -1;
-  
-  // Go through each week and track when month changes
-  for (let weekIndex = 0; weekIndex < weeks.length; weekIndex++) {
-    const weekFirstDay = new Date(weeks[weekIndex][0].date);
-    const month = weekFirstDay.getMonth();
-    
-    if (month !== lastMonth) {
-      months.push({
-        name: formatMonth(weekFirstDay),
-        index: weekIndex  // Position is based on week index
-      });
-      lastMonth = month;
-    }
-  }
-  
-  return {
-    weeks,
-    months,
-    colors: activityColors
-  };
-}
-
-// Helper function to format date as YYYY-MM-DD
-function formatDate(date: Date): string {
-  const year = date.getFullYear();
-  const month = (date.getMonth() + 1).toString().padStart(2, '0');
-  const day = date.getDate().toString().padStart(2, '0');
-  return `${year}-${month}-${day}`;
-}
-
-// Helper function to format month name
-function formatMonth(date: Date): string {
-  // Return abbreviated month name (Jan, Feb, etc.)
-  return date.toLocaleString('default', { month: 'short' });
 }

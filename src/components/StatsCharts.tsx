@@ -1,5 +1,5 @@
 
-import React, { useRef, useEffect } from "react";
+import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Chart as ChartJS,
@@ -15,11 +15,8 @@ import { Pie, Bar } from "react-chartjs-2";
 import { GitHubRepo, GitHubEvent } from "@/utils/fetchGithubData";
 import { 
   getLanguageDistribution, 
-  getTopRepositories, 
-  getContributionData 
+  getTopRepositories
 } from "@/utils/processChartData";
-import { Github } from "lucide-react";
-import { ScrollArea } from "@/components/ui/scroll-area";
 
 // Register Chart.js components
 ChartJS.register(
@@ -38,10 +35,8 @@ interface StatsChartsProps {
 }
 
 const StatsCharts: React.FC<StatsChartsProps> = ({ repos, events }) => {
-  const contributionContainerRef = useRef<HTMLDivElement>(null);
   const languageData = getLanguageDistribution(repos);
   const topReposData = getTopRepositories(repos, 5);
-  const contributionData = getContributionData(events);
 
   // Chart options
   const languageOptions = {
@@ -95,16 +90,6 @@ const StatsCharts: React.FC<StatsChartsProps> = ({ repos, events }) => {
   };
 
   const hasRepos = repos && repos.length > 0;
-  const hasEvents = events && events.length > 0;
-
-  // Effect to ensure proper scrolling behavior for the contribution graph
-  useEffect(() => {
-    if (contributionContainerRef.current) {
-      const container = contributionContainerRef.current;
-      // Set initial scroll position to show all weeks if needed
-      container.scrollLeft = 0;
-    }
-  }, [contributionData]);
 
   return (
     <div className="grid md:grid-cols-2 gap-6">
@@ -130,80 +115,6 @@ const StatsCharts: React.FC<StatsChartsProps> = ({ repos, events }) => {
             <div className="h-[300px] w-full">
               <Bar data={topReposData} options={barOptions} />
             </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {hasEvents && (
-        <Card className="github-card md:col-span-2">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>Contribution Graph (Last 6 Months)</CardTitle>
-            <Github className="h-5 w-5 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <ScrollArea className="h-[220px] w-full overflow-hidden">
-              <div 
-                ref={contributionContainerRef}
-                className="min-w-[740px] pb-4 relative"
-              >
-                {/* Month labels - positioned absolutely for better accuracy */}
-                <div className="flex relative h-6 mb-1">
-                  {contributionData.months.map((month, i) => (
-                    <div
-                      key={i}
-                      className="absolute text-xs text-muted-foreground whitespace-nowrap"
-                      style={{
-                        left: `${month.index * 12}px`
-                      }}
-                    >
-                      {month.name}
-                    </div>
-                  ))}
-                </div>
-                
-                <div className="flex">
-                  {/* Day labels */}
-                  <div className="pr-2 text-xs flex flex-col justify-around h-[104px] text-muted-foreground">
-                    <span>Sun</span>
-                    <span>Tue</span>
-                    <span>Thu</span>
-                    <span>Sat</span>
-                  </div>
-                  
-                  {/* Contribution cells */}
-                  <div className="flex gap-1">
-                    {contributionData.weeks.map((week, weekIndex) => (
-                      <div key={weekIndex} className="flex flex-col gap-1">
-                        {week.map((day, dayIndex) => (
-                          <div
-                            key={`${weekIndex}-${dayIndex}`}
-                            className="w-3 h-3 rounded-sm"
-                            style={{ 
-                              backgroundColor: contributionData.colors[day.level],
-                              cursor: 'pointer'
-                            }}
-                            title={`${day.date}: ${day.count} contributions`}
-                          />
-                        ))}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                
-                {/* Color scale */}
-                <div className="flex items-center justify-end mt-4 text-xs text-muted-foreground">
-                  <span className="mr-2">Less</span>
-                  {contributionData.colors.map((color, i) => (
-                    <div
-                      key={i}
-                      className="w-3 h-3 rounded-sm mx-1"
-                      style={{ backgroundColor: color }}
-                    />
-                  ))}
-                  <span className="ml-2">More</span>
-                </div>
-              </div>
-            </ScrollArea>
           </CardContent>
         </Card>
       )}
