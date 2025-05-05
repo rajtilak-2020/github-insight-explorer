@@ -56,15 +56,7 @@ const StatsCharts: React.FC<StatsChartsProps> = ({ repos, events }) => {
         },
       },
       tooltip: {
-        callbacks: {
-          label: (context: any) => {
-            const label = context.label || "";
-            const value = context.raw || 0;
-            const total = context.chart.data.datasets[0].data.reduce((a: number, b: number) => a + b, 0);
-            const percentage = ((value / total) * 100).toFixed(1);
-            return `${label}: ${value} repos (${percentage}%)`;
-          },
-        },
+        
       },
     },
     responsive: true,
