@@ -17,6 +17,8 @@ import {
   getLanguageDistribution, 
   getTopRepositories
 } from "@/utils/processChartData";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 // Register Chart.js components
 ChartJS.register(
@@ -35,8 +37,9 @@ interface StatsChartsProps {
 }
 
 const StatsCharts: React.FC<StatsChartsProps> = ({ repos, events }) => {
+  const isMobile = useIsMobile();
   const languageData = getLanguageDistribution(repos);
-  const topReposData = getTopRepositories(repos, 5);
+  const topReposData = getTopRepositories(repos, isMobile ? 3 : 5);
 
   // Chart options
   const languageOptions = {
@@ -44,6 +47,13 @@ const StatsCharts: React.FC<StatsChartsProps> = ({ repos, events }) => {
       legend: {
         display: true,
         position: "bottom" as const,
+        labels: {
+          boxWidth: 12,
+          padding: isMobile ? 10 : 20,
+          font: {
+            size: isMobile ? 10 : 12,
+          },
+        },
       },
       tooltip: {
         callbacks: {
@@ -69,6 +79,9 @@ const StatsCharts: React.FC<StatsChartsProps> = ({ repos, events }) => {
         beginAtZero: true,
         ticks: {
           precision: 0,
+          font: {
+            size: isMobile ? 10 : 12,
+          },
         },
       },
       x: {
@@ -76,12 +89,22 @@ const StatsCharts: React.FC<StatsChartsProps> = ({ repos, events }) => {
           autoSkip: false,
           maxRotation: 45,
           minRotation: 45,
+          font: {
+            size: isMobile ? 9 : 11,
+          },
         },
       },
     },
     plugins: {
       legend: {
         position: "top" as const,
+        labels: {
+          boxWidth: 12,
+          padding: isMobile ? 10 : 20,
+          font: {
+            size: isMobile ? 10 : 12,
+          },
+        },
       },
       title: {
         display: false,
@@ -90,16 +113,17 @@ const StatsCharts: React.FC<StatsChartsProps> = ({ repos, events }) => {
   };
 
   const hasRepos = repos && repos.length > 0;
+  const chartHeight = isMobile ? "240px" : "300px";
 
   return (
-    <div className="grid md:grid-cols-2 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
       {hasRepos && (
-        <Card className="github-card md:col-span-1">
-          <CardHeader>
-            <CardTitle>Language Distribution</CardTitle>
+        <Card className="github-card col-span-1">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg md:text-xl">Language Distribution</CardTitle>
           </CardHeader>
-          <CardContent className="flex items-center justify-center">
-            <div className="h-[300px] w-full">
+          <CardContent className="p-2 md:p-4">
+            <div className="h-[240px] md:h-[300px] w-full">
               <Pie data={languageData} options={languageOptions} />
             </div>
           </CardContent>
@@ -107,14 +131,16 @@ const StatsCharts: React.FC<StatsChartsProps> = ({ repos, events }) => {
       )}
 
       {hasRepos && (
-        <Card className="github-card md:col-span-1">
-          <CardHeader>
-            <CardTitle>Top Repositories</CardTitle>
+        <Card className="github-card col-span-1">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg md:text-xl">Top Repositories</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="h-[300px] w-full">
-              <Bar data={topReposData} options={barOptions} />
-            </div>
+          <CardContent className="p-2 md:p-4">
+            <ScrollArea className="h-[240px] md:h-[300px] w-full">
+              <div className="min-h-[240px] md:min-h-[300px] min-w-[300px]">
+                <Bar data={topReposData} options={barOptions} />
+              </div>
+            </ScrollArea>
           </CardContent>
         </Card>
       )}

@@ -4,6 +4,7 @@ import { Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface SearchBarProps {
   onSearch: (username: string) => void;
@@ -12,6 +13,7 @@ interface SearchBarProps {
 
 const SearchBar: React.FC<SearchBarProps> = ({ onSearch, isLoading = false }) => {
   const [username, setUsername] = useState<string>("");
+  const isMobile = useIsMobile();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,14 +41,14 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch, isLoading = false }) =>
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           type="text"
-          placeholder="Enter GitHub username"
+          placeholder={isMobile ? "GitHub username" : "Enter GitHub username"}
           value={username}
           onChange={(e) => setUsername(e.target.value)}
           className="pl-10"
           disabled={isLoading}
         />
       </div>
-      <Button type="submit" disabled={isLoading}>
+      <Button type="submit" disabled={isLoading} size={isMobile ? "sm" : "default"}>
         {isLoading ? "Loading..." : "Analyze"}
       </Button>
     </form>
