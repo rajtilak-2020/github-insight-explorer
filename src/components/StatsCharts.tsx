@@ -1,24 +1,23 @@
-import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Chart as ChartJS,
-  ArcElement,
-  Tooltip,
-  Legend,
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  Title,
-  TooltipItem,
-} from 'chart.js';
-import { Pie, Bar } from 'react-chartjs-2';
-import { GitHubRepo, GitHubEvent } from "@/utils/fetchGithubData";
-import { 
-  getLanguageDistribution, 
-  getTopRepositories
-} from "@/utils/processChartData";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { GitHubEvent, GitHubRepo } from "@/utils/fetchGithubData";
+import {
+  getLanguageDistribution,
+  getTopRepositories
+} from "@/utils/processChartData";
+import {
+  ArcElement,
+  BarElement,
+  CategoryScale,
+  Chart as ChartJS,
+  Legend,
+  LinearScale,
+  Title,
+  Tooltip
+} from 'chart.js';
+import React from "react";
+import { Bar, Pie } from 'react-chartjs-2';
 
 // Register Chart.js components
 ChartJS.register(
